@@ -31,13 +31,16 @@ public class BookService {
     }
 
     public Mono<BookDTO> getById(UUID id) {
-        Mono<Book> mono = bookRepository.findById(id);
-        return mono.map(bookMapper::mapToDTO);
+        return bookRepository.findById(id)
+                .retry(3)
+                .switchIfEmpty(Mono.error(new BookNotFoundException(id)))
+                .onErrorResume(e -> Mono.error(new RuntimeException("Error while fetching a book with id = " + id, e)))
+                .map(bookMapper::mapToDTO);
     }
 
     public Mono<BookDTO> update(UUID id, BookDTO bookDTO) {
         return bookRepository.findById(id)
-                .doOnError(error -> Mono.error(new BookNotFoundException(id)))
+                .switchIfEmpty(Mono.error(new BookNotFoundException(id)))
                 .map(book -> {
                     book.setAuthor(bookDTO.getAuthor());
                     book.setTitle(bookDTO.getTitle());
