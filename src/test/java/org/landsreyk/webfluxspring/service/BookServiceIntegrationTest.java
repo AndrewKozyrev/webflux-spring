@@ -16,6 +16,8 @@ import reactor.test.StepVerifier;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest
 @TestMethodOrder(OrderAnnotation.class)
 class BookServiceIntegrationTest {
@@ -125,4 +127,21 @@ class BookServiceIntegrationTest {
                 .expectError(BookNotFoundException.class)
                 .verify();
     }
+
+    @Test
+    @Order(7)
+    void testCountBooks() {
+        // given
+        bookRepository.save(new Book("TitleA", "AuthorA", 2022));
+        bookRepository.save(new Book("TitleB", "AuthorB", 2022));
+        bookRepository.save(new Book("TitleC", "AuthorC", 2022));
+        bookRepository.save(new Book("TitleD", "AuthorD", 2022));
+        bookRepository.save(new Book("TitleE", "AuthorE", 2022));
+
+        // when & then
+        StepVerifier.create(bookService.countBooks())
+                .assertNext(count -> assertEquals(5, count))
+                .verifyComplete();
+    }
+
 }

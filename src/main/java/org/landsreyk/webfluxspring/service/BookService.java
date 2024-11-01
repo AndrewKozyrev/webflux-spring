@@ -57,6 +57,16 @@ public class BookService {
     }
 
     /**
+     * Retrieves the total count of books in the repository.
+     *
+     * @return Mono<Long> representing the total number of books.
+     */
+    public Mono<Long> countBooks() {
+        return bookRepository.countBooks();
+    }
+
+
+    /**
      * Validates and creates a new book if it does not already exist in the system.
      *
      * @param book The book data to create.

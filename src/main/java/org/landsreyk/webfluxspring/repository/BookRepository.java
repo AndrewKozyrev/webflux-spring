@@ -40,4 +40,14 @@ public class BookRepository {
                     return true;
                 });
     }
+
+    /**
+     * Returns the total count of books in the repository.
+     *
+     * @return Mono<Long> representing the count of books.
+     */
+    public Mono<Long> countBooks() {
+        return Flux.fromIterable(books.values()).count();
+    }
+
 }
