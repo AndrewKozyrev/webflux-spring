@@ -3,6 +3,7 @@ package org.landsreyk.webfluxspring.service;
 import lombok.RequiredArgsConstructor;
 import org.landsreyk.webfluxspring.dto.BookDTO;
 import org.landsreyk.webfluxspring.exception.BookNotFoundException;
+import org.landsreyk.webfluxspring.exception.DuplicateBookException;
 import org.landsreyk.webfluxspring.mapper.BookMapper;
 import org.landsreyk.webfluxspring.model.Book;
 import org.landsreyk.webfluxspring.repository.BookRepository;
@@ -21,7 +22,7 @@ public class BookService {
 
     public Mono<BookDTO> create(BookDTO bookDTO) {
         Book book = bookMapper.mapToEntity(bookDTO);
-        Mono<Book> mono = bookRepository.save(book);
+        Mono<Book> mono = validateAndCreateBook(book);
         return mono.map(bookMapper::mapToDTO);
     }
 
@@ -53,5 +54,23 @@ public class BookService {
 
     public Mono<Boolean> delete(UUID id) {
         return bookRepository.deleteById(id);
+    }
+
+    /**
+     * Validates and creates a new book if it does not already exist in the system.
+     *
+     * @param book The book data to create.
+     * @return Mono<Book> of the created book if validation passes; emits error if duplicate is found.
+     * @throws DuplicateBookException if a book with the same title and author exists.
+     */
+    private Mono<Book> validateAndCreateBook(Book book) {
+        return bookRepository.findAll().any(x -> x.getTitle().equals(book.getTitle()) && x.getAuthor().equals(book.getAuthor()))
+                .flatMap(isFound -> {
+                    if (!isFound) {
+                        return bookRepository.save(book);
+                    } else {
+                        return Mono.error(new DuplicateBookException(book));
+                    }
+                });
     }
 }

@@ -1,6 +1,5 @@
 package org.landsreyk.webfluxspring.repository;
 
-import lombok.Getter;
 import org.landsreyk.webfluxspring.exception.BookNotFoundException;
 import org.landsreyk.webfluxspring.model.Book;
 import org.springframework.stereotype.Repository;
@@ -14,7 +13,6 @@ import java.util.UUID;
 @Repository
 public class BookRepository {
 
-    @Getter
     private final Map<UUID, Book> books = new LinkedHashMap<>();
 
     public Mono<Book> save(Book book) {
@@ -22,8 +20,12 @@ public class BookRepository {
         return Mono.just(book);
     }
 
+    public Flux<Book> findAll() {
+        return Flux.fromIterable(books.values());
+    }
+
     public Flux<Book> findAll(long page, long size) {
-        return Flux.fromIterable(books.values()).skip(page * size).take(size);
+        return findAll().skip(page * size).take(size);
     }
 
     public Mono<Book> findById(UUID id) {

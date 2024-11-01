@@ -28,7 +28,10 @@ class BookServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        bookRepository.getBooks().clear();
+        bookRepository.findAll()
+                .map(Book::getId)
+                .map(bookRepository::deleteById)
+                .subscribe();
     }
 
     @Test
