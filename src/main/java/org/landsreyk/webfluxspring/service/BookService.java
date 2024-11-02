@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
@@ -82,5 +83,16 @@ public class BookService {
                         return Mono.error(new DuplicateBookException(book));
                     }
                 });
+    }
+
+    /**
+     * Streams all books as a continuous Flux of BookDTOs.
+     *
+     * @return Flux<BookDTO> that emits each book with a delay of 1 second.
+     */
+    public Flux<BookDTO> streamAllBooks() {
+        return bookRepository.findAll()
+                .map(bookMapper::mapToDTO)
+                .delayElements(Duration.ofSeconds(1));
     }
 }

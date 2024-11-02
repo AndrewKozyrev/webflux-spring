@@ -12,7 +12,9 @@ import org.landsreyk.webfluxspring.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.test.StepVerifier;
+import reactor.test.scheduler.VirtualTimeScheduler;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,10 +32,12 @@ class BookServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        bookRepository.findAll()
+        var ids = bookRepository.findAll()
                 .map(Book::getId)
-                .map(bookRepository::deleteById)
-                .subscribe();
+                .collectList()
+                .block();
+        ids.forEach(id -> bookRepository.deleteById(id).block());
+        VirtualTimeScheduler.getOrSet();
     }
 
     @Test
@@ -142,6 +146,24 @@ class BookServiceIntegrationTest {
         StepVerifier.create(bookService.countBooks())
                 .assertNext(count -> assertEquals(5, count))
                 .verifyComplete();
+    }
+
+    @Test
+    @Order(8)
+    void testStreamAllBooks() {
+        // given
+        for (int i = 1; i <= 100; i++) {
+            bookRepository.save(new Book("Title" + i, "Author" + i, 2022));
+        }
+
+        // when & then
+        var step = StepVerifier.withVirtualTime(() -> bookService.streamAllBooks())
+                .expectSubscription();
+        for (int i = 1; i <= 100; i++) {
+            var cnt = i;
+            step = step.thenAwait(Duration.ofSeconds(1)).expectNextMatches(book -> book.getTitle().equals("Title" + cnt));
+        }
+        step.verifyComplete();
     }
 
 }

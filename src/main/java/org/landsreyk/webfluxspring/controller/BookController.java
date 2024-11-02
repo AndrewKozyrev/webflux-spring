@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
+
 @RestController
 @RequestMapping("/books")
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class BookController {
 
     @GetMapping
     public Flux<BookDTO> getAllBooks(@RequestParam @Min(value = 0, message = "Page number can't be negative.") long page,
-                                    @RequestParam @Min(value = 1, message = "Page size can't be less than 1.") @Max(value = 100, message = "Page size maximum value is 100.") long size) {
+                                     @RequestParam @Min(value = 1, message = "Page size can't be less than 1.") @Max(value = 100, message = "Page size maximum value is 100.") long size) {
         return bookService.getAll(page, size);
     }
 
@@ -43,5 +45,10 @@ public class BookController {
     @DeleteMapping("{id}")
     public Mono<Boolean> deleteBook(@PathVariable UUID id) {
         return bookService.delete(id);
+    }
+
+    @GetMapping(value = "/stream", produces = TEXT_EVENT_STREAM_VALUE)
+    public Flux<BookDTO> streamAllBooks() {
+        return bookService.streamAllBooks();
     }
 }
