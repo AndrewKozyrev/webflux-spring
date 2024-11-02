@@ -8,11 +8,10 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.landsreyk.webfluxspring.dto.BookDTO;
 import org.landsreyk.webfluxspring.exception.BookNotFoundException;
 import org.landsreyk.webfluxspring.model.Book;
-import org.landsreyk.webfluxspring.repository.BookRepository;
+import org.landsreyk.webfluxspring.repository.ReactiveDatabaseBookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.test.StepVerifier;
-import reactor.test.scheduler.VirtualTimeScheduler;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -28,16 +27,11 @@ class BookServiceIntegrationTest {
     private BookService bookService;
 
     @Autowired
-    private BookRepository bookRepository;
+    private ReactiveDatabaseBookRepository bookRepository;
 
     @BeforeEach
     void setUp() {
-        var ids = bookRepository.findAll()
-                .map(Book::getId)
-                .collectList()
-                .block();
-        ids.forEach(id -> bookRepository.deleteById(id).block());
-        VirtualTimeScheduler.getOrSet();
+        bookRepository.deleteAll().block();
     }
 
     @Test
@@ -57,7 +51,7 @@ class BookServiceIntegrationTest {
     void testGetAllBooks() {
         // given
         for (int i = 1; i <= 100; i++) {
-            bookRepository.save(new Book("Title" + i, "Author" + i, 2022));
+            bookRepository.save(new Book("Title" + i, "Author" + i, 2022)).block();
         }
 
         // when & then
@@ -71,7 +65,7 @@ class BookServiceIntegrationTest {
     @Order(3)
     void testGetBookById() {
         // given
-        bookRepository.save(new Book("TitleA", "AuthorA", 2022));
+        bookRepository.save(new Book("TitleA", "AuthorA", 2022)).block();
         var saved = bookRepository.save(new Book("TitleB", "AuthorB", 2022));
         var id = Objects.requireNonNull(saved.block()).getId();
 
@@ -104,12 +98,12 @@ class BookServiceIntegrationTest {
     void testDeleteBook() {
         // given
         var existingBookId = bookRepository.save(new Book("TitleA", "AuthorA", 2022)).block().getId();
-        bookRepository.save(new Book("TitleB", "AuthorB", 2022));
-        bookRepository.save(new Book("TitleC", "AuthorC", 2022));
+        bookRepository.save(new Book("TitleB", "AuthorB", 2022)).block();
+        bookRepository.save(new Book("TitleC", "AuthorC", 2022)).block();
 
         // when & then
         StepVerifier.create(bookService.delete(existingBookId))
-                .expectNext(true)
+                .expectNext()
                 .verifyComplete();
 
         StepVerifier.create(bookRepository.findById(existingBookId))
@@ -136,11 +130,9 @@ class BookServiceIntegrationTest {
     @Order(7)
     void testCountBooks() {
         // given
-        bookRepository.save(new Book("TitleA", "AuthorA", 2022));
-        bookRepository.save(new Book("TitleB", "AuthorB", 2022));
-        bookRepository.save(new Book("TitleC", "AuthorC", 2022));
-        bookRepository.save(new Book("TitleD", "AuthorD", 2022));
-        bookRepository.save(new Book("TitleE", "AuthorE", 2022));
+        for (int i = 1; i <= 5; i++) {
+            bookRepository.save(new Book("Title" + i, "Author" + i, 2022)).block();
+        }
 
         // when & then
         StepVerifier.create(bookService.countBooks())
@@ -153,7 +145,7 @@ class BookServiceIntegrationTest {
     void testStreamAllBooks() {
         // given
         for (int i = 1; i <= 100; i++) {
-            bookRepository.save(new Book("Title" + i, "Author" + i, 2022));
+            bookRepository.save(new Book("Title" + i, "Author" + i, 2022)).block();
         }
 
         // when & then

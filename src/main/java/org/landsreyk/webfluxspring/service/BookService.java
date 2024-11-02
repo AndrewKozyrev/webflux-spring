@@ -6,7 +6,7 @@ import org.landsreyk.webfluxspring.exception.BookNotFoundException;
 import org.landsreyk.webfluxspring.exception.DuplicateBookException;
 import org.landsreyk.webfluxspring.mapper.BookMapper;
 import org.landsreyk.webfluxspring.model.Book;
-import org.landsreyk.webfluxspring.repository.BookRepository;
+import org.landsreyk.webfluxspring.repository.ReactiveDatabaseBookRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BookService {
 
-    private final BookRepository bookRepository;
+    private final ReactiveDatabaseBookRepository bookRepository;
     private final BookMapper bookMapper;
 
     public Mono<BookDTO> create(BookDTO bookDTO) {
@@ -28,8 +28,10 @@ public class BookService {
     }
 
     public Flux<BookDTO> getAll(long page, long size) {
-        Flux<Book> flux = bookRepository.findAll(page, size);
-        return flux.map(bookMapper::mapToDTO);
+        return bookRepository.findAll()
+                .skip(page * size)
+                .take(size)
+                .map(bookMapper::mapToDTO);
     }
 
     public Mono<BookDTO> getById(UUID id) {
@@ -49,12 +51,14 @@ public class BookService {
                     book.setPublishedYear(bookDTO.getPublishedYear());
                     return book;
                 })
-                .flatMap(bookRepository::save)
+                .flatMap(bookRepository::update)
                 .map(bookMapper::mapToDTO);
     }
 
-    public Mono<Boolean> delete(UUID id) {
-        return bookRepository.deleteById(id);
+    public Mono<Void> delete(UUID id) {
+        return bookRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BookNotFoundException(id)))
+                .then(bookRepository.deleteById(id));
     }
 
     /**
@@ -63,7 +67,7 @@ public class BookService {
      * @return Mono<Long> representing the total number of books.
      */
     public Mono<Long> countBooks() {
-        return bookRepository.countBooks();
+        return bookRepository.count();
     }
 
 
@@ -77,7 +81,7 @@ public class BookService {
     private Mono<Book> validateAndCreateBook(Book book) {
         return bookRepository.findAll().any(x -> x.getTitle().equals(book.getTitle()) && x.getAuthor().equals(book.getAuthor()))
                 .flatMap(isFound -> {
-                    if (!isFound) {
+                    if (Boolean.FALSE.equals(isFound)) {
                         return bookRepository.save(book);
                     } else {
                         return Mono.error(new DuplicateBookException(book));

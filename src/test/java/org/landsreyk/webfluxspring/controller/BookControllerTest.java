@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.landsreyk.webfluxspring.dto.BookDTO;
 import org.landsreyk.webfluxspring.model.Book;
-import org.landsreyk.webfluxspring.repository.BookRepository;
+import org.landsreyk.webfluxspring.repository.ReactiveDatabaseBookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -24,7 +24,7 @@ class BookControllerTest {
     private WebTestClient webTestClient;
 
     @Autowired
-    private BookRepository bookRepository;
+    private ReactiveDatabaseBookRepository bookRepository;
 
     private static final EasyRandom EASY_RANDOM = new EasyRandom(new EasyRandomParameters().seed(System.currentTimeMillis()));
 
@@ -72,7 +72,9 @@ class BookControllerTest {
     @Test
     void testGetAllBooks_validPagination() {
         // given
-        Stream.iterate(0, x -> x < 10, x -> x + 1).map(x -> EASY_RANDOM.nextObject(Book.class)).forEach(book -> bookRepository.save(book));
+        Stream.iterate(0, x -> x < 10, x -> x + 1)
+                .map(x -> EASY_RANDOM.nextObject(Book.class))
+                .forEach(book -> bookRepository.save(book).block());
 
         // when & then
         webTestClient.get()

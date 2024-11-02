@@ -43,7 +43,7 @@ public class BookController {
     }
 
     @DeleteMapping("{id}")
-    public Mono<Boolean> deleteBook(@PathVariable UUID id) {
+    public Mono<Void> deleteBook(@PathVariable UUID id) {
         return bookService.delete(id);
     }
 

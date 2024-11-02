@@ -1,0 +1,23 @@
+package org.landsreyk.webfluxspring.repository;
+
+import org.landsreyk.webfluxspring.model.Book;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.lang.NonNull;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+public interface ReactiveDatabaseBookRepository extends ReactiveCrudRepository<Book, UUID> {
+
+    @NonNull
+    @Query("SELECT * FROM book WHERE id = :id")
+    Mono<Book> findById(@NonNull UUID id);
+
+    @Query("UPDATE book SET title = :#{#book.title}, author = :#{#book.author}, published_year = :#{#book.publishedYear} WHERE id = :#{#book.id}")
+    Mono<Book> update(@Param("book") @NonNull Book book);
+
+    @Query("DELETE FROM book WHERE id = :id")
+    Mono<Void> deleteById(@NonNull UUID id);
+}

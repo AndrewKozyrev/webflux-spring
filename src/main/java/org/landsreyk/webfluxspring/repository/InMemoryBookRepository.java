@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Repository
-public class BookRepository {
+public class InMemoryBookRepository {
 
     private final Map<UUID, Book> books = new LinkedHashMap<>();
 

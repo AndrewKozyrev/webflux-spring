@@ -3,7 +3,7 @@ package org.landsreyk.webfluxspring.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.landsreyk.webfluxspring.mapper.BookMapper;
-import org.landsreyk.webfluxspring.repository.BookRepository;
+import org.landsreyk.webfluxspring.repository.ReactiveDatabaseBookRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 class BookServiceTest {
 
     @Mock
-    private BookRepository bookRepository;
+    private ReactiveDatabaseBookRepository bookRepository;
 
     @Mock
     private BookMapper bookMapper;
