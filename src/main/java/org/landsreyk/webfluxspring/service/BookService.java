@@ -42,7 +42,7 @@ public class BookService {
                 .map(bookMapper::mapToDTO);
     }
 
-    public Mono<BookDTO> update(UUID id, BookDTO bookDTO) {
+    public Mono<Long> update(UUID id, BookDTO bookDTO) {
         return bookRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BookNotFoundException(id)))
                 .map(book -> {
@@ -51,8 +51,7 @@ public class BookService {
                     book.setPublishedYear(bookDTO.getPublishedYear());
                     return book;
                 })
-                .flatMap(bookRepository::update)
-                .map(bookMapper::mapToDTO);
+                .flatMap(bookRepository::update);
     }
 
     public Mono<Void> delete(UUID id) {

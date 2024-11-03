@@ -80,15 +80,16 @@ class BookServiceIntegrationTest {
     void testUpdateBook() {
         // given
         var id = bookRepository.save(new Book("TitleA", "AuthorA", 2022)).block().getId();
-        bookRepository.save(new Book("TitleB", "AuthorB", 2022));
-        bookRepository.save(new Book("TitleC", "AuthorC", 2022));
+        bookRepository.save(new Book("TitleB", "AuthorB", 2022)).block();
+        bookRepository.save(new Book("TitleC", "AuthorC", 2022)).block();
         var bookDTO = new BookDTO(null, "NewTitle", "NewAuthor", 2022);
 
         // when
-        bookService.update(id, bookDTO).block();
+        var countAffected = bookService.update(id, bookDTO).block();
 
         // then
-        StepVerifier.create(bookService.getById(id))
+        assertEquals(1, countAffected);
+        StepVerifier.create(bookRepository.findById(id))
                 .expectNextMatches(dto -> dto.getTitle().equals("NewTitle") && dto.getAuthor().equals("NewAuthor"))
                 .verifyComplete();
     }

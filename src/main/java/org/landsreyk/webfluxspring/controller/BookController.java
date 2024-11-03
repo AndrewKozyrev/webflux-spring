@@ -38,7 +38,7 @@ public class BookController {
     }
 
     @PutMapping("{id}")
-    public Mono<BookDTO> updateBook(@PathVariable UUID id, @Valid @RequestBody BookDTO bookDTO) {
+    public Mono<Long> updateBook(@PathVariable UUID id, @Valid @RequestBody BookDTO bookDTO) {
         return bookService.update(id, bookDTO);
     }
 
