@@ -11,6 +11,7 @@ import org.landsreyk.webfluxspring.model.Book;
 import org.landsreyk.webfluxspring.repository.ReactiveDatabaseBookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @TestMethodOrder(OrderAnnotation.class)
 class BookServiceIntegrationTest {
 

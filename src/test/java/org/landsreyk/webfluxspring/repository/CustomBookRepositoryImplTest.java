@@ -6,11 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.landsreyk.webfluxspring.model.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class CustomBookRepositoryImplTest {
 
     @Autowired
